@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Mi Rutina</title>
+<style>
+  :root{
+    --bg:#0f1115; --card:#181b22; --card2:#1f232c; --border:#2a2f3a;
+    --text:#e8eaed; --muted:#9aa2b1;
+    --libre:#22c55e; --pre:#3b82f6; --post:#a855f7;
+    --afirm:#f59e0b; --gym:#ef4444; --estudio:#6366f1; --lectura:#7c3aed;
+    --trabajo:#10b981; --rps:#e11d48; --ugc:#f97316; --mutant:#06b6d4;
+    --musica:#14b8a6; --planif:#64748b; --finanzas:#84cc16;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding-bottom:40px;}
+  .wrap{max-width:520px;margin:0 auto;padding:16px;}
+  h1{font-size:20px;margin:0 0 2px;}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:14px;}
+  .modes{display:flex;gap:8px;margin-bottom:14px;}
+  .mode-btn{flex:1;padding:10px 6px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:12.5px;font-weight:600;cursor:pointer;text-align:center;}
+  .mode-btn.active[data-mode="libre"]{background:rgba(34,197,94,.15);border-color:var(--libre);color:var(--libre);}
+  .mode-btn.active[data-mode="pre"]{background:rgba(59,130,246,.15);border-color:var(--pre);color:var(--pre);}
+  .mode-btn.active[data-mode="post"]{background:rgba(168,85,247,.15);border-color:var(--post);color:var(--post);}
+  .top-row{display:flex;gap:10px;margin-bottom:14px;}
+  .stat-card{flex:1;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;text-align:center;}
+  .stat-card .num{font-size:22px;font-weight:700;}
+  .stat-card .lbl{font-size:11px;color:var(--muted);margin-top:2px;}
+  .tabs{display:flex;gap:6px;margin-bottom:14px;}
+  .tab{padding:8px 14px;border-radius:10px;background:var(--card);border:1px solid var(--border);color:var(--muted);font-size:13px;cursor:pointer;}
+  .tab.active{background:var(--card2);color:var(--text);border-color:#3a3f4b;}
+  .settings-btn{margin-left:auto;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 10px;color:var(--muted);cursor:pointer;font-size:13px;}
+  .cat{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:10px;overflow:hidden;}
+  .cat-head{display:flex;align-items:center;gap:8px;padding:10px 12px;font-weight:600;font-size:13.5px;border-bottom:1px solid var(--border);}
+  .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+  .cat-time{margin-left:auto;color:var(--muted);font-size:11.5px;font-weight:500;}
+  .task{display:flex;align-items:center;gap:10px;padding:10px 12px;font-size:13.5px;border-bottom:1px solid rgba(255,255,255,.04);}
+  .task:last-child{border-bottom:none;}
+  .task input{width:18px;height:18px;flex-shrink:0;accent-color:#22c55e;}
+  .task.done label{text-decoration:line-through;color:var(--muted);}
+  .task .mins{margin-left:auto;color:var(--muted);font-size:11.5px;}
+  .rules{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin:16px 0;font-size:12.5px;color:var(--muted);line-height:1.6;}
+  .rules h3{color:var(--text);font-size:13.5px;margin:0 0 8px;}
+  .rules ol{margin:0;padding-left:18px;}
+  .rules b{color:var(--text);}
+  .footer-btns{display:flex;gap:8px;margin-top:16px;}
+  .btn{flex:1;padding:11px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:12.5px;font-weight:600;cursor:pointer;}
+  .btn.danger{color:#f87171;}
+  .btn.primary{background:rgba(34,197,94,.12);border-color:var(--libre);color:var(--libre);}
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center;z-index:50;}
+  .modal-bg.open{display:flex;}
+  .modal{background:var(--card2);width:100%;max-width:520px;border-radius:18px 18px 0 0;padding:18px;max-height:85vh;overflow-y:auto;}
+  .modal h2{margin:0 0 14px;font-size:16px;}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;}
+  .field input[type=text]{width:100%;padding:9px 10px;border-radius:9px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;}
+  .daybox{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+  .daychip{padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--muted);font-size:11.5px;cursor:pointer;}
+  .daychip.on{background:rgba(225,29,72,.15);border-color:var(--rps);color:var(--rps);}
+  .daychip.ugc-on{background:rgba(249,115,22,.15);border-color:var(--ugc);color:var(--ugc);}
+  .modal .close{width:100%;margin-top:10px;padding:11px;border-radius:12px;border:none;background:var(--libre);color:#04220f;font-weight:700;cursor:pointer;}
+  .stats-week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:16px;}
+  .day-cell{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 4px;text-align:center;}
+  .day-cell .d{font-size:10px;color:var(--muted);}
+  .day-cell .p{font-size:13px;font-weight:700;margin-top:3px;}
+  .cat-summary{display:flex;align-items:center;gap:8px;padding:8px 0;font-size:13px;border-bottom:1px solid rgba(255,255,255,.05);}
+  .cat-summary:last-child{border-bottom:none;}
+  .cat-summary .cname{flex:1;}
+  .cat-summary .chrs{color:var(--muted);font-size:12px;}
+  .tabs{flex-wrap:wrap;}
+  .intro-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px;font-size:13px;color:var(--muted);line-height:1.5;}
+  .intro-box b{color:var(--text);}
+  .section-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:14px 0 6px 4px;font-weight:700;}
+  .field textarea{width:100%;padding:9px 10px;border-radius:9px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit;resize:vertical;}
+  .task-extra{padding:0 12px 10px 40px;}
+  .task-extra input{width:100%;padding:7px 9px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;}
+  .toggle2{display:flex;gap:6px;padding:0 12px 10px 40px;}
+  .toggle2 span{padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--muted);font-size:11.5px;cursor:pointer;}
+  .toggle2 span.sel{background:rgba(34,197,94,.15);border-color:var(--libre);color:var(--libre);}
+  .daychip.weekly-on{background:rgba(20,184,166,.15);border-color:var(--musica);color:var(--musica);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📋 Mi Rutina</h1>
+  <div class="sub" id="dateLabel"></div>
+
+  <div class="modes">
+    <div class="mode-btn" data-mode="libre" onclick="setMode('libre')">🟢 Día Libre</div>
+    <div class="mode-btn" data-mode="pre" onclick="setMode('pre')">🔵 Pre-Turno</div>
+    <div class="mode-btn" data-mode="post" onclick="setMode('post')">🟣 Post-Turno</div>
+  </div>
+
+  <div class="top-row">
+    <div class="stat-card"><div class="num" id="completedNum">0 / 0</div><div class="lbl">completados</div></div>
+    <div class="stat-card"><div class="num" id="streakNum">0 🔥</div><div class="lbl">días seguidos activos</div></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="rutina" onclick="setTab('rutina')">📋 Rutina</div>
+    <div class="tab" data-tab="stats" onclick="setTab('stats')">📊 Stats</div>
+    <div class="tab" data-tab="interna" onclick="setTab('interna')">🧠 Interna</div>
+    <div class="settings-btn" onclick="openSettings()">⚙️ Config</div>
+  </div>
+
+  <div id="rutinaView"></div>
+
+  <div id="statsView" style="display:none;">
+    <div class="stats-week" id="statsWeek"></div>
+    <div class="rules">
+      <h3>Resumen por categoría (histórico)</h3>
+      <div id="catSummary"></div>
+    </div>
+  </div>
+
+  <div id="internaView" style="display:none;">
+    <div class="intro-box">
+      <b>Qué es esto</b><br>
+      Una lista corta que repites cada día. Solo marcar ☐. Nada que memorizar.
+    </div>
+
+    <div class="field">
+      <label>Mi meta ahora</label>
+      <input type="text" id="internaMeta" placeholder='Ej: "Cierro el test de mis productos con reservas reales."' oninput="saveInternaMeta()">
+    </div>
+
+    <div class="section-lbl">Mañana</div>
+    <div class="cat" id="internaManana"></div>
+
+    <div class="section-lbl">Durante el día</div>
+    <div class="cat" id="internaDia"></div>
+
+    <div class="section-lbl">Noche</div>
+    <div class="cat" id="internaNoche"></div>
+
+    <div class="rules" style="margin-top:18px;">
+      <h3>📅 Revisión semanal <span style="font-weight:400;color:var(--muted);font-size:11.5px;">(día fijo: <span id="weeklyDayLabel"></span> — cámbialo en ⚙️ Config)</span></h3>
+      <div id="weeklyAuto" style="margin-bottom:10px;font-size:13px;color:var(--text);"></div>
+      <div id="weeklyThoughts" style="margin-bottom:10px;"></div>
+      <div class="field">
+        <label>¿Qué pensamiento de "no hay plata" se repitió más?</label>
+        <textarea id="weeklyRepeat" rows="2" oninput="saveWeekly()"></textarea>
+      </div>
+      <div class="field">
+        <label>¿Qué cambio hago la próxima semana?</label>
+        <textarea id="weeklyChange" rows="2" oninput="saveWeekly()"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="rules">
+    <h3>Reglas del sistema</h3>
+    <ol>
+      <li><b>Afirmaciones antes de comer</b>: mañana y tarde, 5–10 min, no negociable.</li>
+      <li><b>Lectura fija</b>: 1 capítulo diario + 1h de trabajos de lectura (aplicación de lo leído).</li>
+      <li><b>Estudio diario</b>: 2h de estudio enfocado en ecommerce.</li>
+      <li><b>Prioridad de trabajo</b>: dentro del bloque de Trabajo, primero la tarea de mayor impacto.</li>
+      <li><b>Modo avión</b> obligatorio durante los bloques de enfoque profundo (estudio, DS, UGC).</li>
+      <li><b>Ratio 2:1</b> práctica/estudio en las tareas de ecommerce.</li>
+      <li><b>Restricción de laptop</b> en la noche después de un turno — protección del cerebro (aplica en Post-Turno).</li>
+    </ol>
+  </div>
+
+  <div class="footer-btns">
+    <button class="btn primary" onclick="connectSheets()">🔗 Conectar con Google Sheets</button>
+    <button class="btn danger" onclick="manualReset()">♻️ Reiniciar manualmente</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="settingsModal">
+  <div class="modal">
+    <h2>⚙️ Configuración</h2>
+
+    <div class="field">
+      <label>Días de apoyo a RPS Security (dentro del bloque de Trabajo)</label>
+      <div class="daybox" id="rpsDayBox"></div>
+    </div>
+
+    <div class="field">
+      <label>Día de UGC completo (reemplaza importaciones ese día)</label>
+      <div class="daybox" id="ugcDayBox"></div>
+    </div>
+
+    <div class="field">
+      <label>Día fijo de revisión semanal (Rutina Interna)</label>
+      <div class="daybox" id="weeklyDayBox"></div>
+    </div>
+
+    <div class="field">
+      <label>Google Client ID (proyecto "Claude Drive")</label>
+      <input type="text" id="cfgClientId" placeholder="xxxxxxxx.apps.googleusercontent.com">
+    </div>
+    <div class="field">
+      <label>ID de la hoja de Google Sheets</label>
+      <input type="text" id="cfgSheetId" placeholder="ID de tu spreadsheet">
+    </div>
+
+    <button class="close" onclick="saveSettings()">Guardar</button>
+  </div>
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+/* ============ CONFIG BASE ============ */
+const STORAGE_KEY = 'miRutinaData_v2';
+const DAY_NAMES = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+const DAY_SHORT = ['D','L','M','X','J','V','S'];
+
+const CATS = {
+  afirm:   {name:'Afirmaciones', color:'var(--afirm)'},
+  gym:     {name:'Gym',          color:'var(--gym)'},
+  estudio: {name:'Estudio',      color:'var(--estudio)'},
+  lectura: {name:'Lectura',      color:'var(--lectura)'},
+  trabajo: {name:'Trabajo',      color:'var(--trabajo)'},
+  rps:     {name:'RPS Security', color:'var(--rps)'},
+  ugc:     {name:'UGC',          color:'var(--ugc)'},
+  mutant:  {name:'Mutant Elite', color:'var(--mutant)'},
+  musica:  {name:'Música',       color:'var(--musica)'},
+  planif:  {name:'Planif.',      color:'var(--planif)'},
+  finanzas:{name:'Finanzas',     color:'var(--finanzas)'},
+};
+
+// Rutina Interna: checklist diario corto de creencias/dinero, anidado dentro de la app principal.
+const INTERNA_TASKS = {
+  manana: [
+    {id:'im_1', label:'Escribo mi meta a mano'},
+    {id:'im_2', label:'Me imagino 3 minutos logrando mi meta'},
+    {id:'im_3', label:'Digo 3 frases en voz alta contra mis creencias de dinero'},
+    {id:'im_4', label:'Escribo 3 cosas por las que estoy agradecido'},
+  ],
+  dia: [
+    {id:'id_1', label:'Hago una acción real para mi negocio'},
+    {id:'id_2', label:'Anoto un pensamiento de "no hay plata" que tuve hoy', hasText:true},
+  ],
+  noche: [
+    {id:'in_1', label:'¿Hoy actué con la creencia nueva o con la vieja?', hasToggle:true},
+    {id:'in_2', label:'Vuelvo a leer mi meta'},
+  ]
+};
+function allInternaTaskIds(){
+  return [...INTERNA_TASKS.manana, ...INTERNA_TASKS.dia, ...INTERNA_TASKS.noche].map(t=>t.id);
+}
+
+// Tareas base por modo. "trabajo" en Día Libre se arma dinámicamente según el día.
+function buildTasksForMode(mode, dayIdx, settings){
+  if(mode === 'libre'){
+    const t = [
+      {id:'afirm_am', cat:'afirm', label:'Afirmación matutina', mins:10},
+      {id:'afirm_pm', cat:'afirm', label:'Afirmación de tarde', mins:10},
+      {id:'gym_1', cat:'gym', label:'Entrenamiento', mins:90},
+      {id:'estudio_1', cat:'estudio', label:'Estudio ecommerce', mins:120},
+      {id:'lectura_1', cat:'lectura', label:'Capítulo del día', mins:30},
+      {id:'lectura_2', cat:'lectura', label:'Trabajos de lectura (aplicación)', mins:60},
+      {id:'mutant_1', cat:'mutant', label:'Pensar / mejorar Mutant Elite', mins:30},
+      {id:'musica_1', cat:'musica', label:'Composición y canto', mins:60},
+      {id:'planif_1', cat:'planif', label:'Planificación del día', mins:15},
+      {id:'finanzas_1', cat:'finanzas', label:'Revisión de finanzas', mins:15},
+    ];
+    const isUGC = dayIdx === settings.ugcDay;
+    const isRPS = settings.rpsDays.includes(dayIdx);
+    if(isUGC){
+      t.push({id:'ugc_1', cat:'ugc', label:'Producción UGC completa (todo el bloque)', mins:360});
+    } else {
+      t.push({id:'trabajo_1', cat:'trabajo', label:'Importaciones + Ecommerce', mins: isRPS ? 300 : 360});
+      if(isRPS){
+        t.push({id:'rps_1', cat:'rps', label:'Apoyo a RPS Security', mins:60});
+      }
+    }
+    return t;
+  }
+  if(mode === 'pre'){
+    return [
+      {id:'afirm_am', cat:'afirm', label:'Afirmación matutina', mins:10},
+      {id:'gym_1', cat:'gym', label:'Entrenamiento ligero', mins:45},
+      {id:'estudio_1', cat:'estudio', label:'Estudio ecommerce', mins:60},
+      {id:'lectura_1', cat:'lectura', label:'Capítulo del día', mins:20},
+      {id:'trabajo_1', cat:'trabajo', label:'Importaciones + Ecommerce (medio día)', mins:180},
+      {id:'planif_1', cat:'planif', label:'Planificación / preparar turno', mins:15},
+    ];
+  }
+  // post-turno
+  return [
+    {id:'afirm_am', cat:'afirm', label:'Afirmación (al despertar)', mins:10},
+    {id:'lectura_1', cat:'lectura', label:'Capítulo del día (ligero)', mins:20},
+    {id:'musica_1', cat:'musica', label:'Música (ocio, ligero)', mins:30},
+  ];
+}
+
+/* ============ ESTADO ============ */
+let state = loadState();
+let currentMode = state.mode || 'libre';
+let currentTab = 'rutina';
+
+function fmtDate(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function todayStr(){
+  return fmtDate(new Date());
+}
+
+function loadState(){
+  let raw;
+  try{ raw = JSON.parse(localStorage.getItem(STORAGE_KEY)); }catch(e){ raw = null; }
+  const def = {
+    mode:'libre',
+    today: todayStr(),
+    checks: {},
+    streak: 0,
+    lastFullDay: null,
+    history: {}, // { '2026-09-18': {mode:'libre', done:8, total:11, catMinutes:{...}} }
+    settings: { rpsDays:[1,3,5], ugcDay:4, weeklyReviewDay:0, clientId:'', sheetId:'' },
+    interna: { meta:'', checks:{}, thoughtText:'', creenciaHoy:null, weeklyRepeat:'', weeklyChange:'' },
+    internaHistory: {} // { '2026-09-18': {done:6, total:8, thought:'...', creencia:'nueva'} }
+  };
+  if(!raw) return def;
+  raw.settings = Object.assign({}, def.settings, raw.settings||{});
+  raw.interna = Object.assign({}, def.interna, raw.interna||{});
+  raw.history = raw.history || {};
+  raw.internaHistory = raw.internaHistory || {};
+  return Object.assign({}, def, raw);
+}
+
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function checkDailyReset(){
+  const t = todayStr();
+  if(state.today !== t){
+    // cerrar el día anterior en el histórico
+    const tasks = buildTasksForMode(currentMode, new Date(state.today+'T12:00:00').getDay(), state.settings);
+    const done = tasks.filter(x=>state.checks[x.id]).length;
+    const total = tasks.length;
+    state.history[state.today] = { mode: currentMode, done, total };
+    // streak
+    if(total>0 && done === total){
+      state.streak = (state.streak||0) + 1;
+    } else {
+      state.streak = 0;
+    }
+    // archivar y resetear la Rutina Interna
+    const iIds = allInternaTaskIds();
+    const iDone = iIds.filter(id=>state.interna.checks[id]).length;
+    state.internaHistory[state.today] = {
+      done: iDone, total: iIds.length,
+      thought: state.interna.thoughtText || '',
+      creencia: state.interna.creenciaHoy || null
+    };
+    state.interna.checks = {};
+    state.interna.thoughtText = '';
+    state.interna.creenciaHoy = null;
+
+    state.today = t;
+    state.checks = {};
+    saveState();
+  }
+}
+
+/* ============ RENDER ============ */
+function setMode(mode){
+  currentMode = mode;
+  state.mode = mode;
+  saveState();
+  render();
+}
+function setTab(tab){
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(el=>el.classList.toggle('active', el.dataset.tab===tab));
+  document.getElementById('rutinaView').style.display = tab==='rutina' ? '' : 'none';
+  document.getElementById('statsView').style.display = tab==='stats' ? '' : 'none';
+  document.getElementById('internaView').style.display = tab==='interna' ? '' : 'none';
+  if(tab==='stats') renderStats();
+  if(tab==='interna') renderInterna();
+}
+
+function toggleTask(id){
+  state.checks[id] = !state.checks[id];
+  saveState();
+  render();
+}
+
+function render(){
+  document.querySelectorAll('.mode-btn').forEach(el=>el.classList.toggle('active', el.dataset.mode===currentMode));
+  const now = new Date();
+  document.getElementById('dateLabel').textContent = DAY_NAMES[now.getDay()] + ' ' + now.getDate() + '/' + (now.getMonth()+1) + '/' + now.getFullYear();
+
+  const tasks = buildTasksForMode(currentMode, now.getDay(), state.settings);
+  const grouped = {};
+  tasks.forEach(t=>{ (grouped[t.cat] = grouped[t.cat]||[]).push(t); });
+
+  let html = '';
+  Object.keys(grouped).forEach(cat=>{
+    const catDef = CATS[cat];
+    const list = grouped[cat];
+    const totalMins = list.reduce((a,b)=>a+b.mins,0);
+    html += `<div class="cat">
+      <div class="cat-head"><span class="dot" style="background:${catDef.color}"></span>${catDef.name}<span class="cat-time">${(totalMins/60).toFixed(1)}h</span></div>`;
+    list.forEach(t=>{
+      const checked = !!state.checks[t.id];
+      html += `<div class="task ${checked?'done':''}">
+        <input type="checkbox" ${checked?'checked':''} onchange="toggleTask('${t.id}')">
+        <label>${t.label}</label>
+        <span class="mins">${t.mins} min</span>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  document.getElementById('rutinaView').innerHTML = html;
+
+  const done = tasks.filter(t=>state.checks[t.id]).length;
+  document.getElementById('completedNum').textContent = `${done} / ${tasks.length}`;
+  document.getElementById('streakNum').textContent = `${state.streak||0} 🔥`;
+}
+
+function renderStats(){
+  const now = new Date();
+  let weekHtml = '';
+  for(let i=6;i>=0;i--){
+    const d = new Date(now); d.setDate(now.getDate()-i);
+    const key = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const rec = state.history[key];
+    let pct = '–';
+    if(key === state.today){
+      const tasks = buildTasksForMode(currentMode, d.getDay(), state.settings);
+      const done = tasks.filter(t=>state.checks[t.id]).length;
+      pct = tasks.length ? Math.round(done/tasks.length*100)+'%' : '–';
+    } else if(rec && rec.total){
+      pct = Math.round(rec.done/rec.total*100)+'%';
+    }
+    weekHtml += `<div class="day-cell"><div class="d">${DAY_SHORT[d.getDay()]}</div><div class="p">${pct}</div></div>`;
+  }
+  document.getElementById('statsWeek').innerHTML = weekHtml;
+
+  let sumHtml = '';
+  Object.keys(CATS).forEach(cat=>{
+    sumHtml += `<div class="cat-summary"><span class="dot" style="background:${CATS[cat].color}"></span><span class="cname">${CATS[cat].name}</span></div>`;
+  });
+  document.getElementById('catSummary').innerHTML = sumHtml;
+}
+
+/* ============ SETTINGS ============ */
+function openSettings(){
+  const box1 = document.getElementById('rpsDayBox');
+  const box2 = document.getElementById('ugcDayBox');
+  const box3 = document.getElementById('weeklyDayBox');
+  box1.innerHTML = DAY_NAMES.map((n,i)=>`<span class="daychip ${state.settings.rpsDays.includes(i)?'on':''}" onclick="toggleRpsDay(${i})">${n.slice(0,3)}</span>`).join('');
+  box2.innerHTML = DAY_NAMES.map((n,i)=>`<span class="daychip ${state.settings.ugcDay===i?'ugc-on':''}" onclick="setUgcDay(${i})">${n.slice(0,3)}</span>`).join('');
+  box3.innerHTML = DAY_NAMES.map((n,i)=>`<span class="daychip ${state.settings.weeklyReviewDay===i?'weekly-on':''}" onclick="setWeeklyDay(${i})">${n.slice(0,3)}</span>`).join('');
+  document.getElementById('cfgClientId').value = state.settings.clientId||'';
+  document.getElementById('cfgSheetId').value = state.settings.sheetId||'';
+  document.getElementById('settingsModal').classList.add('open');
+}
+function toggleRpsDay(i){
+  const idx = state.settings.rpsDays.indexOf(i);
+  if(idx>-1) state.settings.rpsDays.splice(idx,1); else state.settings.rpsDays.push(i);
+  openSettings();
+}
+function setUgcDay(i){
+  state.settings.ugcDay = i;
+  openSettings();
+}
+function setWeeklyDay(i){
+  state.settings.weeklyReviewDay = i;
+  openSettings();
+}
+function saveSettings(){
+  state.settings.clientId = document.getElementById('cfgClientId').value.trim();
+  state.settings.sheetId = document.getElementById('cfgSheetId').value.trim();
+  saveState();
+  document.getElementById('settingsModal').classList.remove('open');
+  render();
+}
+
+/* ============ RUTINA INTERNA ============ */
+function internaTaskHtml(t){
+  const checked = !!state.interna.checks[t.id];
+  let extra = '';
+  if(t.hasText){
+    const val = (state.interna.thoughtText||'').replace(/"/g,'&quot;');
+    extra = `<div class="task-extra"><input type="text" placeholder="¿Cuál fue el pensamiento?" value="${val}" oninput="setInternaThought(this.value)"></div>`;
+  }
+  if(t.hasToggle){
+    const val = state.interna.creenciaHoy;
+    extra = `<div class="toggle2"><span class="${val==='nueva'?'sel':''}" onclick="setCreencia('nueva')">Nueva</span><span class="${val==='vieja'?'sel':''}" onclick="setCreencia('vieja')">Vieja</span></div>`;
+  }
+  return `<div class="task ${checked?'done':''}">
+      <input type="checkbox" ${checked?'checked':''} onchange="toggleInterna('${t.id}')">
+      <label>${t.label}</label>
+    </div>${extra}`;
+}
+
+function toggleInterna(id){
+  state.interna.checks[id] = !state.interna.checks[id];
+  saveState();
+  renderInterna();
+}
+function setInternaThought(v){
+  state.interna.thoughtText = v;
+  saveState();
+}
+function setCreencia(v){
+  state.interna.creenciaHoy = v;
+  saveState();
+  renderInterna();
+}
+function saveInternaMeta(){
+  state.interna.meta = document.getElementById('internaMeta').value;
+  saveState();
+}
+function saveWeekly(){
+  state.interna.weeklyRepeat = document.getElementById('weeklyRepeat').value;
+  state.interna.weeklyChange = document.getElementById('weeklyChange').value;
+  saveState();
+}
+
+function renderInterna(){
+  document.getElementById('internaMeta').value = state.interna.meta||'';
+  document.getElementById('internaManana').innerHTML = INTERNA_TASKS.manana.map(internaTaskHtml).join('');
+  document.getElementById('internaDia').innerHTML = INTERNA_TASKS.dia.map(internaTaskHtml).join('');
+  document.getElementById('internaNoche').innerHTML = INTERNA_TASKS.noche.map(internaTaskHtml).join('');
+  document.getElementById('weeklyDayLabel').textContent = DAY_NAMES[state.settings.weeklyReviewDay!=null ? state.settings.weeklyReviewDay : 0];
+
+  const now = new Date();
+  const allIds = allInternaTaskIds();
+  let fullDays = 0;
+  let thoughts = [];
+  for(let i=0;i<7;i++){
+    const d = new Date(now); d.setDate(now.getDate()-i);
+    const key = fmtDate(d);
+    let rec;
+    if(key === state.today){
+      rec = { done: allIds.filter(id=>state.interna.checks[id]).length, total: allIds.length, thought: state.interna.thoughtText };
+    } else {
+      rec = state.internaHistory[key];
+    }
+    if(rec && rec.total && rec.done === rec.total) fullDays++;
+    if(i>0 && rec && rec.thought) thoughts.push(`${DAY_SHORT[d.getDay()]}: "${rec.thought}"`);
+  }
+  document.getElementById('weeklyAuto').textContent = `Cumplí la lista completa ${fullDays} de 7 días esta semana.`;
+  document.getElementById('weeklyThoughts').innerHTML = thoughts.length
+    ? '<div style="font-size:12px;color:var(--muted);">Pensamientos "no hay plata" de esta semana:<br>'+thoughts.join('<br>')+'</div>'
+    : '<div style="font-size:12px;color:var(--muted);">Aún no registras pensamientos esta semana.</div>';
+  document.getElementById('weeklyRepeat').value = state.interna.weeklyRepeat||'';
+  document.getElementById('weeklyChange').value = state.interna.weeklyChange||'';
+}
+
+/* ============ GOOGLE SHEETS ============ */
+let tokenClient = null;
+function connectSheets(){
+  if(!state.settings.clientId){
+    alert('Primero configura tu Google Client ID en ⚙️ Config (proyecto "Claude Drive").');
+    openSettings();
+    return;
+  }
+  if(typeof google === 'undefined' || !google.accounts){
+    alert('El script de Google todavía está cargando, intenta de nuevo en un segundo.');
+    return;
+  }
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: state.settings.clientId,
+    scope: 'https://www.googleapis.com/auth/spreadsheets',
+    callback: (resp) => {
+      if(resp.access_token){
+        syncToSheet(resp.access_token);
+      }
+    }
+  });
+  tokenClient.requestAccessToken();
+}
+
+function syncToSheet(accessToken){
+  if(!state.settings.sheetId){
+    alert('Configura el ID de tu hoja de Google Sheets en ⚙️ Config.');
+    openSettings();
+    return;
+  }
+  const now = new Date();
+  const tasks = buildTasksForMode(currentMode, now.getDay(), state.settings);
+  const done = tasks.filter(t=>state.checks[t.id]).length;
+  const row = [[todayStr(), currentMode, done, tasks.length, state.streak||0]];
+  fetch(`https://sheets.googleapis.com/v4/spreadsheets/${state.settings.sheetId}/values/A1:append?valueInputOption=USER_ENTERED`, {
+    method:'POST',
+    headers:{ 'Authorization':'Bearer '+accessToken, 'Content-Type':'application/json' },
+    body: JSON.stringify({ values: row })
+  }).then(r=>{
+    if(r.ok){ alert('Sincronizado con Google Sheets ✅'); }
+    else { alert('Hubo un error sincronizando. Revisa el ID de la hoja y los permisos.'); }
+  }).catch(()=>alert('No se pudo conectar con Google Sheets.'));
+}
+
+/* ============ RESET MANUAL ============ */
+function manualReset(){
+  if(confirm('¿Reiniciar todas las casillas de hoy?')){
+    state.checks = {};
+    saveState();
+    render();
+  }
+}
+
+/* ============ INIT ============ */
+checkDailyReset();
+setTab('rutina');
+render();
+</script>
+</body>
+</html>
