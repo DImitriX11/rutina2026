@@ -10,7 +10,7 @@
     --text:#e8eaed; --muted:#9aa2b1;
     --libre:#22c55e; --pre:#3b82f6; --post:#a855f7;
     --afirm:#f59e0b; --gym:#ef4444; --estudio:#6366f1; --lectura:#7c3aed;
-    --trabajo:#10b981; --rps:#e11d48; --ugc:#f97316; --mutant:#06b6d4;
+    --trabajo:#10b981; --rps:#e11d48; --mutant:#06b6d4;
     --musica:#14b8a6; --planif:#64748b; --finanzas:#84cc16;
   }
   *{box-sizing:border-box;}
@@ -58,7 +58,6 @@
   .daybox{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
   .daychip{padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--muted);font-size:11.5px;cursor:pointer;}
   .daychip.on{background:rgba(225,29,72,.15);border-color:var(--rps);color:var(--rps);}
-  .daychip.ugc-on{background:rgba(249,115,22,.15);border-color:var(--ugc);color:var(--ugc);}
   .modal .close{width:100%;margin-top:10px;padding:11px;border-radius:12px;border:none;background:var(--libre);color:#04220f;font-weight:700;cursor:pointer;}
   .stats-week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:16px;}
   .day-cell{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 4px;text-align:center;}
@@ -156,7 +155,7 @@
       <li><b>Lectura fija</b>: 1 capítulo diario + 1h de trabajos de lectura (aplicación de lo leído).</li>
       <li><b>Estudio diario</b>: 2h de estudio enfocado en ecommerce.</li>
       <li><b>Prioridad de trabajo</b>: dentro del bloque de Trabajo, primero la tarea de mayor impacto.</li>
-      <li><b>Modo avión</b> obligatorio durante los bloques de enfoque profundo (estudio, DS, UGC).</li>
+      <li><b>Modo avión</b> obligatorio durante los bloques de enfoque profundo (estudio, DS).</li>
       <li><b>Ratio 2:1</b> práctica/estudio en las tareas de ecommerce.</li>
       <li><b>Restricción de laptop</b> en la noche después de un turno — protección del cerebro (aplica en Post-Turno).</li>
     </ol>
@@ -175,11 +174,6 @@
     <div class="field">
       <label>Días de apoyo a RPS Security (dentro del bloque de Trabajo)</label>
       <div class="daybox" id="rpsDayBox"></div>
-    </div>
-
-    <div class="field">
-      <label>Día de UGC completo (reemplaza importaciones ese día)</label>
-      <div class="daybox" id="ugcDayBox"></div>
     </div>
 
     <div class="field">
@@ -214,7 +208,6 @@ const CATS = {
   lectura: {name:'Lectura',      color:'var(--lectura)'},
   trabajo: {name:'Trabajo',      color:'var(--trabajo)'},
   rps:     {name:'RPS Security', color:'var(--rps)'},
-  ugc:     {name:'UGC',          color:'var(--ugc)'},
   mutant:  {name:'Mutant Elite', color:'var(--mutant)'},
   musica:  {name:'Música',       color:'var(--musica)'},
   planif:  {name:'Planif.',      color:'var(--planif)'},
@@ -257,15 +250,10 @@ function buildTasksForMode(mode, dayIdx, settings){
       {id:'planif_1', cat:'planif', label:'Planificación del día', mins:15},
       {id:'finanzas_1', cat:'finanzas', label:'Revisión de finanzas', mins:15},
     ];
-    const isUGC = dayIdx === settings.ugcDay;
     const isRPS = settings.rpsDays.includes(dayIdx);
-    if(isUGC){
-      t.push({id:'ugc_1', cat:'ugc', label:'Producción UGC completa (todo el bloque)', mins:360});
-    } else {
-      t.push({id:'trabajo_1', cat:'trabajo', label:'Importaciones + Ecommerce', mins: isRPS ? 300 : 360});
-      if(isRPS){
-        t.push({id:'rps_1', cat:'rps', label:'Apoyo a RPS Security', mins:60});
-      }
+    t.push({id:'trabajo_1', cat:'trabajo', label:'Importaciones + Ecommerce', mins: isRPS ? 300 : 360});
+    if(isRPS){
+      t.push({id:'rps_1', cat:'rps', label:'Apoyo a RPS Security', mins:60});
     }
     return t;
   }
@@ -309,7 +297,7 @@ function loadState(){
     streak: 0,
     lastFullDay: null,
     history: {}, // { '2026-09-18': {mode:'libre', done:8, total:11, catMinutes:{...}} }
-    settings: { rpsDays:[1,3,5], ugcDay:4, weeklyReviewDay:0, clientId:'', sheetId:'' },
+    settings: { rpsDays:[1,3,5], weeklyReviewDay:0, clientId:'', sheetId:'' },
     interna: { meta:'', checks:{}, thoughtText:'', creenciaHoy:null, weeklyRepeat:'', weeklyChange:'' },
     internaHistory: {} // { '2026-09-18': {done:6, total:8, thought:'...', creencia:'nueva'} }
   };
@@ -442,10 +430,8 @@ function renderStats(){
 /* ============ SETTINGS ============ */
 function openSettings(){
   const box1 = document.getElementById('rpsDayBox');
-  const box2 = document.getElementById('ugcDayBox');
   const box3 = document.getElementById('weeklyDayBox');
   box1.innerHTML = DAY_NAMES.map((n,i)=>`<span class="daychip ${state.settings.rpsDays.includes(i)?'on':''}" onclick="toggleRpsDay(${i})">${n.slice(0,3)}</span>`).join('');
-  box2.innerHTML = DAY_NAMES.map((n,i)=>`<span class="daychip ${state.settings.ugcDay===i?'ugc-on':''}" onclick="setUgcDay(${i})">${n.slice(0,3)}</span>`).join('');
   box3.innerHTML = DAY_NAMES.map((n,i)=>`<span class="daychip ${state.settings.weeklyReviewDay===i?'weekly-on':''}" onclick="setWeeklyDay(${i})">${n.slice(0,3)}</span>`).join('');
   document.getElementById('cfgClientId').value = state.settings.clientId||'';
   document.getElementById('cfgSheetId').value = state.settings.sheetId||'';
@@ -454,10 +440,6 @@ function openSettings(){
 function toggleRpsDay(i){
   const idx = state.settings.rpsDays.indexOf(i);
   if(idx>-1) state.settings.rpsDays.splice(idx,1); else state.settings.rpsDays.push(i);
-  openSettings();
-}
-function setUgcDay(i){
-  state.settings.ugcDay = i;
   openSettings();
 }
 function setWeeklyDay(i){
